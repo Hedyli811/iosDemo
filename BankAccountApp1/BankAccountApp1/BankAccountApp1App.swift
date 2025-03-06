@@ -1,14 +1,14 @@
 //
-//  BanKAccountAppApp.swift
-//  BanKAccountApp
+//  BankAccountApp1App.swift
+//  BankAccountApp1
 //
-//  Created by LI, Hedy on 2025-02-18.
+//  Created by LI, Hedy on 2025-03-06.
 //
 
 import SwiftUI
 
 @main
-struct BanKAccountAppApp: App {
+struct BankAccountApp1App: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

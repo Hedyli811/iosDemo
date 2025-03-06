@@ -9,9 +9,14 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var username: String = ""
-    @State private var password: String = ""
-    @State private var message: String = ""
-    @State private var lastLogin: String = ""
+       @State private var password: String = ""
+       @State private var loginMessage: String = ""
+       @State private var lastLoginDate: Date?
+       @State private var isFirstLogin: Bool = true // Determine if it's the first login
+
+       private let savedUsernameKey = "savedUsername"
+       private let lastLoginDateKey = "lastLoginDate"
+       private let hardcodedPassword = "Secret"
     
     
     var body: some View {
@@ -33,32 +38,79 @@ struct ContentView: View {
             .multilineTextAlignment(.center)
             .padding()
         Button("Log In") {
-             let theName = UserDefaults.standard.object(forKey: "username")
-            
-            if(theName == nil){
-                UserDefaults.standard.set(username, forKey: "username")
-            }
-            else{
-                if(password == "secret" ){
-                    message = ""
-                }else{
-                    message = "wrong credential"
-                }
-            }
-           
-            let now = Date()
-            var datefrmt = DateFormatter()
-            datefrmt.dateStyle = .medium
-            lastLogin = datefrmt.string(from: now)
-             
+            authenticateUser()
 
         }
-        Text(lastLogin)
+        Text(loginMessage)
+        if let lastLogin = lastLoginDate {
+                      Text("Last login: \(formattedDate(lastLogin))")
+                      Text("\(timeElapsed(since: lastLogin)) ago")
+                  } else {
+                      Text(isFirstLogin ? "This is your first log in" : "")
+                  }
+        
     }
-}
+    
+    
+    private func authenticateUser() {
+        let savedUsername = UserDefaults.standard.string(forKey: savedUsernameKey)
 
+        if username.isEmpty || password.isEmpty {
+            loginMessage = "Username and password cannot be empty."
+            return
+        }
 
+        if savedUsername == nil {
+            // First-time user
+            UserDefaults.standard.set(username, forKey: savedUsernameKey)
+            lastLoginDate = Date() // Set last login date
+            UserDefaults.standard.set(lastLoginDate!, forKey: lastLoginDateKey)
+            loginMessage = "Login successful! You are registered."
+            isFirstLogin = false
+        } else if username == savedUsername && password == hardcodedPassword {
+            // Returning user with correct username and password
+            lastLoginDate = Date()
+            UserDefaults.standard.set(lastLoginDate!, forKey: lastLoginDateKey)
+            loginMessage = "Login successful!"
+            isFirstLogin = false
+        } else {
+            // Incorrect credentials
+            loginMessage = "Incorrect username or password."
+        }
+    }
 
+    private func loadUserDefaults() {
+        username = UserDefaults.standard.string(forKey: savedUsernameKey) ?? ""
+        if let date = UserDefaults.standard.object(forKey: lastLoginDateKey) as? Date {
+            lastLoginDate = date
+            isFirstLogin = false
+        }
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
+    }
+
+    private func timeElapsed(since date: Date) -> String {
+        let elapsed = Date().timeIntervalSince(date)
+        let days = Int(elapsed / (24 * 3600))
+        let hours = Int((elapsed.truncatingRemainder(dividingBy: 86400)) / 3600)
+        let minutes = Int((elapsed.truncatingRemainder(dividingBy: 3600)) / 60)
+        let seconds = Int(elapsed.truncatingRemainder(dividingBy: 60))
+
+        var components: [String] = []
+        if days > 0 { components.append("\(days) days") }
+        if hours > 0 { components.append("\(hours) hours") }
+        if minutes > 0 { components.append("\(minutes) minutes") }
+        if seconds > 0 { components.append("\(seconds) seconds") }
+
+        return components.joined(separator: ", ")
+    }}
+
+ 
 #Preview {
     ContentView()
 }
