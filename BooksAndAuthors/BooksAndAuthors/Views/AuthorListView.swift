@@ -13,6 +13,20 @@ struct AuthorListView: View {
         NavigationStack {
             List {
                 // List of authors and delete action goes here
+                ForEach(authors) {
+                    author in
+                    NavigationLink(author.name){
+                        AuthorDetailView(author: author)
+                    }
+                }
+                .onDelete{
+                    IndexSet in
+                    if let index = IndexSet.first{
+                        authorToDelete = authors[index]
+                        showDeleteDialog = true
+                    }
+                }
+               
             }
             .navigationTitle("Authors")
             .toolbar {
@@ -21,12 +35,26 @@ struct AuthorListView: View {
                         TextField("New Author", text: $newAuthorName)
                         Button("Add") {
                             // Code to insert author goes here
+                            let newAuthor = Author(name:newAuthorName)
+                            context.insert(newAuthor)
+                            try? context.save()
+                            newAuthorName = ""
                         }
                     }
                 }
             }
             .confirmationDialog("Delete Author?", isPresented: $showDeleteDialog) {
                 // Delete confirmation logic goes here
+                Button("Delete",role:.destructive){
+                    if let author = authorToDelete{
+                        context.delete(author)
+                        try? context.save()
+                    }
+                    authorToDelete = nil
+                }
+                Button("Cancel",role:.cancel){
+                    authorToDelete = nil
+                }
             }
         }
     }

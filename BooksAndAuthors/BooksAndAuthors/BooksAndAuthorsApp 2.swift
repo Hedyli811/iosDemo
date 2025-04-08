@@ -7,6 +7,6 @@ struct BooksAndAuthorsApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [Book.self, Author.self])
+        .modelContainer(for: [Book.self, Author.self,BookCover.self])
     }
 }
