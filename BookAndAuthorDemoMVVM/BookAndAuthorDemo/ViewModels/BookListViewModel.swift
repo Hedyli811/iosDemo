@@ -8,33 +8,71 @@ import SwiftUI
 import SwiftData
 
 @Observable
-class BookViewModel{
-  
-  func toggleAuthor(_ author: Author ,_ book: Book,_ context : ModelContext) {
-      // Code to assign/unassign author from book goes here
-    if let index = book.authors.firstIndex(of: author) {
-      book.authors.remove(at: index)  // Unassign author
-    } else {
-      book.authors.append(author)  // Assign author
+class BookListViewModel{
+    
+    var newBookTitle = ""
+    var books: [Book] = []
+    
+    var searchText: String  = ""
+    var errorState = ErrorState()
+    let context : ModelContext
+    
+    init( context: ModelContext) {
+        
+        self.context = context
     }
-    try? context.save()
-  }
-  
-  func insertBookCover (_ book : Book, _ context : ModelContext){
-    let newCover = BookCover(imageName: "SampleCover", book: book)
-    context.insert(newCover)
-    try? context.save()
-  }
-  
-  func insertBook(_ title : String, _ context : ModelContext){
-    let book = Book(title: title)
-    context.insert(book)
-    try? context.save()
-  }
-  func deleteBook( _ bookToDelete : Book?, _ context : ModelContext){
-    if let book = bookToDelete {
-      context.delete(book)
-      try? context.save()
+    
+    func loadBooks(){
+        let descriptor = FetchDescriptor<Book>(sortBy: [SortDescriptor(\.title)])
+        books = (try? context.fetch(descriptor)) ?? []
     }
-  }
+    
+    var filteredBooks:[Book]{
+        if searchText.isEmpty{
+            return books
+        }else{
+            return books.filter{
+                $0.title.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
+    func addBook(){
+        guard !newBookTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let book = Book(title: newBookTitle)
+        
+        context.insert(book)
+        
+        do{
+            try context.save()
+            newBookTitle = ""
+            loadBooks()
+        }
+        catch{
+            errorState.message = "could not add book"
+            errorState.showAlert = true
+            loadBooks()
+        }
+    }
+    
+    func deleteBook( _ book: Book){
+        guard book.authors.isEmpty else{
+            errorState.message = "cannot delete a book that has authors"
+            errorState.showAlert = true
+            return
+        }
+        
+        context.delete(book)
+        do{
+            try context.save()
+            newBookTitle = ""
+            loadBooks()
+        }
+        catch{
+            errorState.message = "could not delete it may be a system error"
+            errorState.showAlert = true
+            loadBooks()
+        }
+    }
+   
 }

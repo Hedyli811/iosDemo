@@ -2,47 +2,55 @@ import SwiftUI
 import SwiftData
 
 struct BookDetailView: View {
-    @Environment(\.modelContext) private var context
-    @Bindable var book: Book
-    @Query private var authors: [Author]
-  @Bindable var viewModel = BookViewModel()
+  
+    @Bindable var viewModel : BookDetailViewModel
+    @State private var showcoverAssignedAlert = false
 
     var body: some View {
-        List {
-            Section(header: Text("Tap to assign/unassign authors")) {
-                // List of authors and toggle logic goes here
-              ForEach(authors){
-                author in
-                HStack{
-                  Text (author.name)
-                  Spacer()
-                  if book.authors.contains(author){
-                    Image(systemName: "checkmark")
-                  }
-                  
-                }.contentShape(Rectangle())
-                  .onTapGesture{
-                    viewModel.toggleAuthor(author,book,context)
-                  }
-              }
-            }
-          Section(header: Text("Cover")){
-            if let cover = book.cover{
-              Image(cover.imageName)
-                .resizable()
-                .scaledToFit()
-                .frame(maxHeight : 200)
-            }else{
-              Text("No cover assigned")
-            }
-            Button("Assign simple cover"){
-              viewModel.insertBookCover(book,context)
+        Form{
+            Section(header:Text("Ttitle")){
+                Text(viewModel.book.title)
             }
             
-          }
+            Section(header:Text("Authos")){
+                ForEach(viewModel.authors,id:\.id){
+                   author in
+                    Button{
+                        viewModel.toggleAuthor(author)
+                    }label:{
+                        HStack{
+                            Text(author.name)
+                            Spacer()
+                            if viewModel.book.authors.contains(author){
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Section(header:Text("Cover")){
+                if let imageName = viewModel.book.cover?.imageName{
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height:200)
+                }
+                if viewModel.book.cover == nil {
+                    Text("cover Image: Not assigned")
+                    Button("assign sample cover"){
+                        viewModel.assignSampleCover()
+                        showcoverAssignedAlert = true
+                    }
+                }
+            }
         }
-        .navigationTitle(book.title)
+        .navigationTitle(viewModel.book.title)
+        .alert("cover assigned",isPresented:$showcoverAssignedAlert){
+            Button("OK",role: .cancel){}
+        }
+        
     }
 
-   //
+ 
 }

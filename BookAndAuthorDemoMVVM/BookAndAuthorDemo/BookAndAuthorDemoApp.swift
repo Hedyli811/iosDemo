@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-
+@main
 struct BookAndAuthorDemoApp: App {
     var body: some Scene {
         WindowGroup {

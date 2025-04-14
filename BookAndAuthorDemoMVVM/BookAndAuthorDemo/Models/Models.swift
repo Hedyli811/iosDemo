@@ -2,14 +2,18 @@ import SwiftData
 
 @Model
 class Book {
+    
+    
     var title: String
+    
     @Relationship(deleteRule: .deny, inverse: \Author.books)
     var authors: [Author] = []
   
-  @Relationship(deleteRule: .cascade, inverse: \BookCover.book)
-  var cover: BookCover?
+    @Relationship(deleteRule: .cascade, inverse: \BookCover.book)
+    var cover: BookCover?
 
     init(title: String) {
+        
         self.title = title
     }
 }
@@ -17,8 +21,9 @@ class Book {
 @Model
 class BookCover {
   var imageName: String
+    
   @Relationship(deleteRule: .nullify)
-var book:Book?
+  var book:Book?
   
   
   

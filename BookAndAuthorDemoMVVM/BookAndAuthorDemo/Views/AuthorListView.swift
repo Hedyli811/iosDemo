@@ -2,25 +2,21 @@ import SwiftUI
 import SwiftData
 
 struct AuthorListView: View {
-  @Environment(\.modelContext) private var context
-  @State private var newAuthorName = ""
-  @State private var authorToDelete: Author?
-  @State private var showDeleteDialog = false
-  
-  @Query private var authors: [Author]
-  @Bindable var viewModel = AuthorViewModel()
+   
+    @Bindable var viewModel : AuthorListViewModel
   
   var body: some View {
     NavigationStack {
       List {
-        ForEach(authors) { author in
+          ForEach(viewModel.authors) { author in
           NavigationLink(author.name) {
             AuthorDetailView(author: author)
           }
-        }.onDelete {IndexSet in
-          if let index = IndexSet.first{
-            authorToDelete = authors[index]
-            showDeleteDialog = true
+        }.onDelete {indexSet in
+            indexSet.forEach{
+                index in
+                let author = viewModel.authors[index]
+                viewModel.deleteAuthor(author)
           }
         }
       }
@@ -28,26 +24,19 @@ struct AuthorListView: View {
         .toolbar {
           ToolbarItem(placement: .bottomBar) {
             HStack {
-              TextField("New Author", text: $newAuthorName)
+                TextField("New Author", text: $viewModel.newAuthorName)
               Button("Add") {
                   // Code to insert author goes here
-                viewModel.insertAuthor(newAuthorName, context)
-                newAuthorName = ""
-                
+                  viewModel.addAuthor()
+                 
               }
             }
           }
         }
-        .confirmationDialog("Delete Author?", isPresented: $showDeleteDialog) {
-            // Delete confirmation logic goes here
-          
-          Button("Delete", role : .destructive){
-            viewModel.deleteAuthor(authorToDelete, context)
-            authorToDelete = nil
-          }
-          Button("Cencle", role : .cancel){
-            authorToDelete = nil
-          }
+        .alert("Error", isPresented: $viewModel.errorState.showAlert){
+            Button("OK",role:.cancel){}
+        } message:{
+            Text(viewModel.errorState.message ?? "something went wrong")
         }
       }
     }
